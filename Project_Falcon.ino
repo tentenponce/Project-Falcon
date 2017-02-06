@@ -19,6 +19,7 @@
 #include "WiFiEsp.h" //For wifi
 #include "SIM900.h" // For sms
 #include "sms.h" // For sms
+#include "call.h" // For Calls
 
 /*For wifi configurations*/
 IPAddress ip(192, 168, 1, 100); //static ip, so there will be no problem
@@ -36,6 +37,10 @@ boolean started = false; // set to true if GSM communication is okay
 byte Position; //address for sim card messages
 char number[20]; //who texted
 char smsbuffer[160]; // storage for SMS message
+
+/*For Call Configurations*/
+CallGSM call;
+byte stat = 0; //handles the status of call
 
 /*Project Falcon Configurations*/
 boolean hasSms = false; //default no sms
@@ -95,6 +100,12 @@ void setup() {
 
 
 void loop() {
+  if (isIncomingCall()) {
+    buzz(10);
+  } else {
+    noTone(buzzer); //make sure that there's no tone
+  }
+
   if (!isSound) {
     isSound = true; //1 time buzz only
     tone(buzzer, 1000); // Send 1KHz sound signal...
@@ -126,6 +137,16 @@ void loop() {
     // close the connection
     client.stop();
     Serial.println("Client disconnected");
+  }
+}
+
+boolean isIncomingCall() {
+  stat = call.CallStatusWithAuth(number, 1, 3); //get call status
+
+  if (stat == 4) { //4 means there's someone calling
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -212,3 +233,4 @@ void printWifiStatus() {
   Serial.println(ip);
   Serial.println();
 }
+
